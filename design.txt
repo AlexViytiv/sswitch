@@ -1,0 +1,90 @@
+[Document]
+type: design
+version: 0.0.0
+owner: OV
+
+
+[Product]
+name: Software Switch
+license: GNU AGPLv3
+version: 0.0.0
+release: 13 Jan 2020
+contributors: OV
+
+
+[Content]
+1. Description.
+2. Structure.
+    2.1. ssw_hw.
+    2.2. ssw_sdk.
+    2.3. ssw_cli.
+3. Modules design.
+4. References.
+
+
+=== [1. Description] ==========================================================
+
+    Software Switch (SSW) is a computer program which simulates legacy  switch
+ functionality on basic level. Small amount of features are included on  early
+ stages of development. Product will simulate work of HW, provide SDK for con-
+ figuration and CLI for better user experience.
+    SWS has been created in educational puposes.  Commercial  distribution  of
+ this product or any part of it is  strictly  prohibited.  Sources  have  been
+ provided "AS IS", and without any warranty included.
+
+
+=== [2. Structure] ============================================================
+
+    SSW is a compicated program complex which consist of  multiple  components
+ that interact between each other. There are 3 major layers of SWS:
+
+    1. ssw_hw  - software library that provides emulation of HW.
+    2. ssw_sdk - component that provide HW configuration facilities.
+    3. ssw_cli - user-friendly environment for switch configuration.
+
+--- [2.1. ssw_hw] -------------------------------------------------------------
+
+    ssw_hw provide switch HW functionality simulation. Purpose of  this  layer
+ is to receive packets on ingress port, define  outgoing  port  and  send  the
+ packet. This layer works in separate process and consist of multiple threads:
+
+    1. serdes   - thread works with ports. Receive and send packets  from/into
+                  TAP interfaces.
+    2. pipeline - flow  of  packets  header  parsing.  Purpose  is  to  define
+                  outgoing port for each packet. Flow works with SHMEM,  where
+                  SDK writes configuration.
+
+--- [2.2. ssw_sdk] ------------------------------------------------------------
+
+    ssw_sdk provide API for switch HW  configuration.  Layer  wrap  all  logic
+ required for HW configuration inside of API functions. Each  module  has  own
+ set of API functions. There are such SDK modules:
+
+    1. FDB  - Provides Forwarding DataBase management functionality.
+    2. PORT - Provides ports management functionality.
+    3. VLAN - Provides ports grouping and isolation using 802.1Q technology.
+    4. TELE - Provides monitoring of different parameters and statistics.
+
+ Also SDK have other parts:
+
+    *. FW   - Provides communication of SDK and HW. Works with SHMEM.
+    *. COMM - Provides management of user API calls.
+
+ SDK consist of such threads:
+
+    1. api  - Get user requests and push them into calls processing queue.
+    2. core - Consistently process each API call and send info to fw layer.
+    3. fw   - Get data from core layer and write it into SHMEM.
+
+--- [2.3. ssw_cli] ------------------------------------------------------------
+
+    ssw_cli is an user-side application which provide to the user  simple  and
+ intuitive interface for SWS switch configuration. This application have  only
+ one thread. It converts user CLI command into a CMD packet which program will
+ send to SDK via UDS.
+
+
+=== [3. Modules design] =======================================================
+
+
+
