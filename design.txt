@@ -54,6 +54,29 @@ contributors: OV
                   outgoing port for each packet. Flow works with SHMEM,  where
                   SDK writes configuration.
 
+
+   [switch.pipeline]
+      blocks:
+         vlan
+         fdb
+
+      algorithm:
+         recv packet
+         save packet into common buffer
+         create packet unique hash-id (address in memory)
+         pass hash id to fdb component
+            - get packet sMAC, dMAC, port and VLAN.
+            - if sMAC == dMAC: drop.
+            - if port not in VLAN: drop.
+            - learn sMAC <-> port.
+                  if unknown: save.
+            - lookup dMAC <-> port.
+                  if unknown: broadcast on VLAN.
+         * save all egress ports in some list.
+         send packet to each defined port.
+
+
+
 --- [2.2. ssw_sdk] ------------------------------------------------------------
 
     ssw_sdk provide API for switch HW  configuration.  Layer  wrap  all  logic
