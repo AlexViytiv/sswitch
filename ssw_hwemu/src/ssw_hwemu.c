@@ -37,7 +37,7 @@ ssw_status_t ssw_hw_tap_open(char * tap_name, int * tap_fd)
     }
 
     /* Open the clone device */
-    if ((*tap_fd = open(clonedev, O_RDWR)) < 0 ) {
+    if ((fd = open(clonedev, O_RDWR)) < 0 ) {
         return SC_FILE_OPEN_FAILED;
     }
 
@@ -53,8 +53,8 @@ ssw_status_t ssw_hw_tap_open(char * tap_name, int * tap_fd)
     }
 
     /* Create the device with specified name */
-    if( (err = ioctl(*tap_fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
-        close(*tap_fd);
+    if( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
+        close(fd);
         return SC_FILE_OPEN_FAILED;
     }
 
@@ -62,6 +62,7 @@ ssw_status_t ssw_hw_tap_open(char * tap_name, int * tap_fd)
      * interface to the variable "tap_name", so the caller can know
      * it. Note that the caller MUST reserve space in *tap_name */
     strcpy(tap_name, ifr.ifr_name);
+    *tap_fd = fd;
 
     return SC_OK;
 }
@@ -120,7 +121,7 @@ ssw_status_t ssw_hw_port_destroy(int port_fd)
 ssw_status_t ssw_init(uint8_t switch_id)
 {
     ssw_status_t status = SC_OK;
-    int port_fd = 0;
+    int port_fd = -1;
 
 
     printf(" Software Switch %u initialized.\n", switch_id);
