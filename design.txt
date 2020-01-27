@@ -54,6 +54,36 @@ contributors: OV
                   outgoing port for each packet. Flow works with SHMEM,  where
                   SDK writes configuration.
 
+   [switch.underlay]
+      Each switch will use configuration file for environment configuration.
+      For now there are two possible ways for inter-switch communication:
+
+         1) Via TAP interfaces:
+             __________  tap_sw1p2        tap_sw2p2  __________
+            | Switch 1 | -----------(br1)---------- | Switch 2 |
+             ````[]````                              ````[]````
+                  | tap_sw1p1                             | tap_sw2p1
+                  |                                       |
+                (br0)                                    (br2)
+                  |                                       |
+                  | tap_testsw1               tap_testsw2 |
+             ____[]______________________________________[]____
+            |      Python script with Scapy to test setup      |
+             ``````````````````````````````````````````````````
+
+         2) Via VETH interfaces:
+             __________  veth_sw1p2      veth_sw2p2  __________
+            | Switch 1 | -------------------------- | Switch 2 |
+             ````[]````                              ````[]````
+                  | veth_sw1p1                            | veth_sw2p1
+                  |                                       |
+                  | veth_testsw1             veth_testsw2 |
+             ____[]______________________________________[]____
+            |      Python script with Scapy to test setup      |
+             ``````````````````````````````````````````````````
+
+
+
 
    [switch.pipeline]
       blocks:
