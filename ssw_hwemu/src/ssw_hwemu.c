@@ -28,6 +28,9 @@
  #define ASCII_ZERO  (0x30)
 
 
+uint8_t g_swid = 0;
+uint8_t g_swid_ports_num = 0;
+
 char ssw_hwemu_ascii_low_case(char c)
 {
     if (c >= ASCII_a && c <= ASCII_z) {
@@ -93,7 +96,8 @@ ssw_status_t ssw_hw_tap_open(char * tap_name, int * tap_fd)
     struct ifreq ifr;
     int          fd, err;
     char       * clonedev = "/dev/net/tun";
-    char       * port_mac = "d2:8c:b1:01:01:01";
+    char         port_mac[18];
+    sprintf(port_mac, "d2:8c:b1:01:%02x:%02x", g_swid, ++g_swid_ports_num);
 
     if (tap_fd == NULL) {
         return SC_PARAM_NULL;
@@ -181,7 +185,7 @@ ssw_status_t ssw_hw_port_destroy(int port_fd)
         return status;
     }
 
-    printf(" Port destroyed.\n");
+    printf(" Port %d destroyed.\n", port_fd);
     return status;
 }
 
@@ -189,27 +193,49 @@ ssw_status_t ssw_init(uint8_t switch_id)
 {
     ssw_status_t status = SC_OK;
     int port_fd = -1;
+    int port_id = 0;
 
 
     printf(" Software Switch %u initialized.\n", switch_id);
 
-    status = ssw_hw_port_create(switch_id, 0, &port_fd);
+    status = ssw_hw_port_create(switch_id, port_id++, &port_fd);
+    if (CHECK_STATUS_FAIL(status)) {
+        printf(" Failed to create switch port %d. [sc: %d]\n", port_id, status);
+        return status;
+    }
+    printf(" Port %d created under FD%d.\n", port_id, port_fd);
 
-    printf(" Port %d created under FD%d.\n", 0, port_fd);
+
+    status = ssw_hw_port_create(switch_id, port_id++, &port_fd);
+    if (CHECK_STATUS_FAIL(status)) {
+        printf(" Failed to create switch port %d. [sc: %d]\n", port_id, status);
+        return status;
+    }
+    printf(" Port %d created under FD%d.\n", port_id, port_fd);
 
     printf(" > Switch is working. Press any key to exit ...\n");
-
     getchar();
 
     status = ssw_hw_port_destroy(port_fd);
-
+    if (CHECK_STATUS_FAIL(status)) {
+        printf(" Failed to destroy switch port %d. [sc: %d]\n", port_id, status);
+        return status;
+    }
     printf(" Software Switch %u uninitialized.\n", switch_id);
+
     return SC_OK;
 }
 
 int main(int argc, char * argv[])
 {
-    ssw_init(0);
+    if (argc != 2) {
+        printf(" Please provide Switch ID.\n");
+        return -1;
+    }
+
+    g_swid = atoi(argv[1]);
+
+    ssw_init(g_swid);
 
     return 0;
 }
