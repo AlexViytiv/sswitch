@@ -205,14 +205,6 @@ ssw_status_t ssw_init(uint8_t switch_id)
     }
     printf(" Port %d created under FD%d.\n", port_id, port_fd);
 
-
-    status = ssw_hw_port_create(switch_id, port_id++, &port_fd);
-    if (CHECK_STATUS_FAIL(status)) {
-        printf(" Failed to create switch port %d. [sc: %d]\n", port_id, status);
-        return status;
-    }
-    printf(" Port %d created under FD%d.\n", port_id, port_fd);
-
     printf(" > Switch is working. Press any key to exit ...\n");
     getchar();
 
